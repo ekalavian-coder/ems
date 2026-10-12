@@ -1,0 +1,51 @@
+<main class="shell">
+  <header class="topbar">
+    <div><p class="eyebrow">PEOPLE OPERATIONS</p><h1>Employee Management</h1><p class="subtitle">Manage employee records and probation dates</p></div>
+    <div class="role-control"><label for="role">Demo role</label><select id="role" [value]="role" (change)="changeRole($any($event.target).value)"><option value="HR">HR</option><option value="EMPLOYEE">Employee</option></select><span class="demo-note">Demo only</span></div>
+  </header>
+
+  <div class="notice"><strong>EMS-247</strong> · Probation end date is editable by HR only. Role selector is for local demonstration, not production authentication.</div>
+  <div *ngIf="error" class="alert error" role="alert">{{ error }}</div>
+  <div *ngIf="success" class="alert success" role="status">{{ success }}</div>
+
+  <section class="workspace">
+    <article class="panel directory">
+      <div class="panel-heading"><div><h2>Employees</h2><p>{{ employees.length }} record(s) shown</p></div><button class="primary" (click)="newEmployee()">+ New employee</button></div>
+      <label class="search-label" for="search">Search employees</label>
+      <div class="search-row"><input id="search" #searchBox [value]="search" (input)="onSearch(searchBox.value)" placeholder="Name, employee code or email"></div>
+      <div *ngIf="loading" class="empty">Loading employees…</div>
+      <div *ngIf="!loading && employees.length === 0" class="empty">No employees found. Create the first record.</div>
+      <div class="employee-list" *ngIf="!loading && employees.length">
+        <button type="button" class="employee-row" *ngFor="let employee of employees" [class.active]="selectedId === employee.id" (click)="edit(employee)">
+          <span class="avatar">{{ employee.first_name.charAt(0) }}{{ employee.last_name.charAt(0) }}</span>
+          <span class="employee-main"><strong>{{ employee.first_name }} {{ employee.last_name }}</strong><small>{{ employee.employee_code }} · {{ employee.department }}</small><small>{{ employee.email }}</small></span>
+          <span class="row-chevron">›</span>
+        </button>
+      </div>
+    </article>
+
+    <article class="panel form-panel">
+      <div class="panel-heading"><div><h2>{{ selectedId ? 'Employee profile' : 'Create employee' }}</h2><p>{{ selectedId ? 'Update employee details' : 'Enter the new employee details' }}</p></div><span class="status-pill">{{ selectedId ? 'ID ' + selectedId : 'NEW' }}</span></div>
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="employee_code">Employee code *</label><input id="employee_code" formControlName="employee_code" placeholder="EMP-1001"><small class="field-error" *ngIf="form.controls.employee_code.touched && form.controls.employee_code.invalid">Required; letters, numbers, _ and - only.</small></div>
+          <div class="field"><label for="email">Work email *</label><input id="email" type="email" formControlName="email" placeholder="name@company.com"><small class="field-error" *ngIf="form.controls.email.touched && form.controls.email.invalid">Enter a valid email.</small></div>
+          <div class="field"><label for="first_name">First name *</label><input id="first_name" formControlName="first_name"></div>
+          <div class="field"><label for="last_name">Last name *</label><input id="last_name" formControlName="last_name"></div>
+          <div class="field"><label for="department">Department *</label><input id="department" formControlName="department" placeholder="Engineering"></div>
+          <div class="field"><label for="job_title">Job title *</label><input id="job_title" formControlName="job_title" placeholder="Software Engineer"></div>
+          <div class="field"><label for="joining_date">Joining date *</label><input id="joining_date" type="date" formControlName="joining_date"></div>
+          <div class="field"><label for="probation_end_date">Probation end date</label><input id="probation_end_date" type="date" formControlName="probation_end_date" [readOnly]="!isHr"><small class="helper" *ngIf="!isHr">Read-only: HR permission required to edit.</small><small class="helper" *ngIf="isHr">Optional; must be on or after joining date.</small></div>
+        </div>
+        <div class="form-footer">
+          <button type="button" class="secondary" (click)="newEmployee()">Clear form</button>
+          <button *ngIf="selectedId && isHr" type="button" class="secondary" (click)="clearProbationDate()">Clear probation date</button>
+          <button *ngIf="selectedId" type="button" class="danger-quiet" (click)="removeSelected()">Delete</button>
+          <button type="submit" class="primary" [disabled]="saving">{{ saving ? 'Saving…' : (selectedId ? 'Save changes' : 'Create employee') }}</button>
+        </div>
+      </form>
+      <div class="contract-note"><span class="dot"></span><span><strong>Data contract:</strong> <code>probation_end_date</code> is nullable. Only the dedicated PATCH endpoint applies the server-side HR check.</span></div>
+    </article>
+  </section>
+  <footer>EMS · Angular + FastAPI + H2 JDBC · Local demo</footer>
+</main>

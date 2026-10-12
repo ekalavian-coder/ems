@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "employee-management": {
+      "command": "python",
+      "args": ["./mcp-server/server.py"],
+      "env": {
+        "EMS_API_BASE_URL": "http://127.0.0.1:8000/api",
+        "EMS_USER_ROLE": "HR"
+      }
+    }
+  }
+}

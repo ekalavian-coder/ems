@@ -1,0 +1,108 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Employee, EmployeeWrite } from './employee.model';
+import { EmployeeService } from './employee.service';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './app.component.html'
+})
+export class AppComponent implements OnInit {
+  private readonly api = inject(EmployeeService);
+  private readonly fb = inject(FormBuilder);
+  employees: Employee[] = [];
+  selectedId: number | null = null;
+  search = '';
+  role = localStorage.getItem('ems-demo-role') || 'HR';
+  loading = false;
+  saving = false;
+  error = '';
+  success = '';
+  readonly form = this.fb.nonNullable.group({
+    employee_code: ['', [Validators.required, Validators.maxLength(30), Validators.pattern(/^[A-Za-z0-9_-]+$/)]],
+    first_name: ['', [Validators.required, Validators.maxLength(80)]],
+    last_name: ['', [Validators.required, Validators.maxLength(80)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+    department: ['', [Validators.required, Validators.maxLength(100)]],
+    job_title: ['', [Validators.required, Validators.maxLength(100)]],
+    joining_date: ['', Validators.required],
+    probation_end_date: ['']
+  });
+
+  ngOnInit(): void { this.load(); }
+  get isHr(): boolean { return this.role === 'HR'; }
+  get selectedEmployee(): Employee | undefined {
+    return this.selectedId == null ? undefined : this.employees.find(e => e.id === this.selectedId);
+  }
+  removeSelected(): void {
+    const employee = this.selectedEmployee;
+    if (employee) this.remove(employee);
+  }
+  load(): void {
+    this.loading = true; this.error = '';
+    this.api.list(this.search).subscribe({
+      next: rows => { this.employees = rows; this.loading = false; },
+      error: err => { this.error = this.errorMessage(err); this.loading = false; }
+    });
+  }
+  onSearch(value: string): void { this.search = value; this.load(); }
+  changeRole(value: string): void {
+    this.role = value; localStorage.setItem('ems-demo-role', value);
+  }
+  newEmployee(): void {
+    this.selectedId = null; this.success = ''; this.error = '';
+    this.form.reset({employee_code:'',first_name:'',last_name:'',email:'',department:'',job_title:'',joining_date:'',probation_end_date:''});
+  }
+  edit(employee: Employee): void {
+    this.selectedId = employee.id; this.success = ''; this.error = '';
+    this.form.reset({
+      employee_code: employee.employee_code, first_name: employee.first_name,
+      last_name: employee.last_name, email: employee.email, department: employee.department,
+      job_title: employee.job_title, joining_date: employee.joining_date,
+      probation_end_date: employee.probation_end_date ?? ''
+    });
+  }
+  save(): void {
+    this.error = ''; this.success = '';
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    const value = this.form.getRawValue();
+    if (value.probation_end_date && value.probation_end_date < value.joining_date) {
+      this.error = 'Probation end date cannot be before joining date.'; return;
+    }
+    const payload: EmployeeWrite = {...value, probation_end_date: value.probation_end_date || null};
+    this.saving = true;
+    const request = this.selectedId ? this.api.update(this.selectedId, payload) : this.api.create(payload);
+    request.subscribe({
+      next: employee => {
+        this.success = `Employee ${employee.employee_code} saved successfully.`;
+        this.saving = false; this.load(); this.edit(employee);
+      },
+      error: err => { this.error = this.errorMessage(err); this.saving = false; }
+    });
+  }
+  clearProbationDate(): void {
+    if (!this.isHr || !this.selectedId) return;
+    this.api.updateProbationDate(this.selectedId, null).subscribe({
+      next: updated => { this.success = 'Probation end date cleared.'; this.edit(updated); this.load(); },
+      error: err => this.error = this.errorMessage(err)
+    });
+  }
+  remove(employee: Employee): void {
+    if (!confirm(`Delete ${employee.first_name} ${employee.last_name}?`)) return;
+    this.api.delete(employee.id).subscribe({
+      next: () => { this.success = 'Employee deleted.'; if (this.selectedId === employee.id) this.newEmployee(); this.load(); },
+      error: err => this.error = this.errorMessage(err)
+    });
+  }
+  private errorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const detail = err.error?.detail;
+      return typeof detail === 'string' ? detail : detail?.message || `Request failed (${err.status}). Is the API running?`;
+    }
+    return 'Unexpected error. Please try again.';
+  }
+}

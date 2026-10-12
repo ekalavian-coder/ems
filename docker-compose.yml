@@ -1,0 +1,40 @@
+services:
+  database:
+    build: ./database-service
+    container_name: ems-database
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9092:9092"
+    volumes:
+      - h2_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/9092'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: ems-backend
+    restart: unless-stopped
+    environment:
+      H2_JDBC_URL: jdbc:h2:tcp://database:9092/./emsdb
+      H2_USER: sa
+      H2_PASSWORD: ""
+      CORS_ORIGINS: http://localhost:4200
+    ports:
+      - "8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: ems-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+
+volumes:
+  h2_data:
