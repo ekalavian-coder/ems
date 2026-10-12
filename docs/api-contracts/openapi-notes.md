@@ -4,7 +4,7 @@ Base path: `/api/employees`
 
 | Method | Path | Purpose | Authorization |
 |---|---|---|---|
-| GET | `/` | List employees; optional `?search=` | Demo app access |
+| GET | `/` | List employees; optional `?search=` (name/code/email substring) and optional `?department=` (case-insensitive exact match). Both filters combine with AND when supplied. | Demo app access |
 | GET | `/{id}` | Get employee | Demo app access |
 | POST | `/` | Create employee | Demo app access |
 | PUT | `/{id}` | Update employee details | Demo app access |

@@ -6,8 +6,15 @@ class EmployeeService:
     def __init__(self, repository: EmployeeRepository | None = None):
         self.repository = repository or EmployeeRepository()
 
-    def list_employees(self, search: str | None = None):
-        return self.repository.list(search)
+    @staticmethod
+    def _normalize(value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+    def list_employees(self, search: str | None = None, department: str | None = None):
+        return self.repository.list(self._normalize(search), self._normalize(department))
 
     def get_employee(self, employee_id: int):
         employee = self.repository.get(employee_id)

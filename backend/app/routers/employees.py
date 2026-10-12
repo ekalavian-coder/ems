@@ -15,8 +15,12 @@ def require_hr(x_user_role: str | None = Header(default=None, alias="X-User-Role
     return x_user_role
 
 @router.get("", response_model=list[EmployeeResponse])
-def list_employees(search: str | None = Query(default=None, max_length=100), service: EmployeeService = Depends(get_service)):
-    return service.list_employees(search)
+def list_employees(
+    search: str | None = Query(default=None, max_length=100),
+    department: str | None = Query(default=None, max_length=100),
+    service: EmployeeService = Depends(get_service),
+):
+    return service.list_employees(search, department)
 
 @router.get("/{employee_id}", response_model=EmployeeResponse)
 def get_employee(employee_id: int, service: EmployeeService = Depends(get_service)):
