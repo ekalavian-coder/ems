@@ -6,7 +6,11 @@ class EmployeeRepository:
 
     COLUMNS = ("id", "employee_code", "first_name", "last_name", "email",
                "department", "job_title", "joining_date", "probation_end_date",
-               "created_at", "updated_at")
+               "hr_verified", "created_at", "updated_at")
+
+    @staticmethod
+    def _b(value) -> bool:
+        return False if value is None else bool(value)
 
     @staticmethod
     def _d(value):
@@ -24,7 +28,7 @@ class EmployeeRepository:
 
     def list(self, search: str | None = None, department: str | None = None):
         sql = ("SELECT id, employee_code, first_name, last_name, email, department, "
-               "job_title, joining_date, probation_end_date, created_at, updated_at "
+               "job_title, joining_date, probation_end_date, hr_verified, created_at, updated_at "
                "FROM employees")
         params = []
         clauses = []
@@ -57,7 +61,7 @@ class EmployeeRepository:
             try:
                 cursor.execute(
                     "SELECT id, employee_code, first_name, last_name, email, department, "
-                    "job_title, joining_date, probation_end_date, created_at, updated_at "
+                    "job_title, joining_date, probation_end_date, hr_verified, created_at, updated_at "
                     "FROM employees WHERE id = ?", [employee_id]
                 )
                 return self._row_to_dict(cursor.fetchone())
@@ -73,10 +77,11 @@ class EmployeeRepository:
             try:
                 cursor.execute(
                     "INSERT INTO employees (employee_code, first_name, last_name, email, department, "
-                    "job_title, joining_date, probation_end_date, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+                    "job_title, joining_date, probation_end_date, hr_verified, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
                     [data["employee_code"], data["first_name"], data["last_name"], data["email"],
-                     data["department"], data["job_title"], self._d(data["joining_date"]), self._d(data.get("probation_end_date"))]
+                     data["department"], data["job_title"], self._d(data["joining_date"]),
+                     self._d(data.get("probation_end_date")), self._b(data.get("hr_verified", False))]
                 )
             finally:
                 cursor.close()
@@ -96,7 +101,7 @@ class EmployeeRepository:
             try:
                 cursor.execute(
                     "SELECT id, employee_code, first_name, last_name, email, department, "
-                    "job_title, joining_date, probation_end_date, created_at, updated_at "
+                    "job_title, joining_date, probation_end_date, hr_verified, created_at, updated_at "
                     "FROM employees WHERE employee_code = ?", [employee_code]
                 )
                 return self._row_to_dict(cursor.fetchone())
@@ -113,10 +118,11 @@ class EmployeeRepository:
                 cursor.execute(
                     "UPDATE employees SET employee_code=?, first_name=?, last_name=?, email=?, "
                     "department=?, job_title=?, joining_date=?, probation_end_date=?, "
-                    "updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    "hr_verified=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
                     [data["employee_code"], data["first_name"], data["last_name"], data["email"],
                      data["department"], data["job_title"], self._d(data["joining_date"]),
-                     self._d(data.get("probation_end_date")), employee_id]
+                     self._d(data.get("probation_end_date")),
+                     self._b(data.get("hr_verified", False)), employee_id]
                 )
                 changed = cursor.rowcount
             finally:
@@ -137,6 +143,26 @@ class EmployeeRepository:
                 cursor.execute(
                     "UPDATE employees SET probation_end_date=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
                     [self._d(probation_end_date), employee_id]
+                )
+                changed = cursor.rowcount
+            finally:
+                cursor.close()
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+        return self.get(employee_id) if changed else None
+
+    def update_hr_verified(self, employee_id: int, hr_verified: bool):
+        connection = get_connection()
+        try:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    "UPDATE employees SET hr_verified=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    [self._b(hr_verified), employee_id]
                 )
                 changed = cursor.rowcount
             finally:
