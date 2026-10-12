@@ -70,6 +70,11 @@ export class AppComponent implements OnInit {
   changeRole(value: string): void {
     this.role = value; localStorage.setItem('ems-demo-role', value);
   }
+  sayHi(): void {
+    this.error = '';
+    this.success = 'Hi';
+  }
+
   newEmployee(): void {
     this.selectedId = null; this.success = ''; this.error = '';
     this.form.reset({employee_code:'',first_name:'',last_name:'',email:'',department:'',job_title:'',joining_date:'',probation_end_date:'',location:'',hr_verified:false});

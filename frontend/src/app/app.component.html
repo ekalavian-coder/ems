@@ -42,6 +42,7 @@
           <div class="field"><label for="location">Location</label><input id="location" type="text" formControlName="location" placeholder="Chennai" maxlength="100"><small class="field-error" *ngIf="form.controls.location.touched && form.controls.location.hasError('maxlength')">Location must be 100 characters or fewer.</small></div>
         </div>
         <div class="form-footer">
+          <button type="button" class="secondary" (click)="sayHi()">Say Hi</button>
           <button type="button" class="secondary" (click)="newEmployee()">Clear form</button>
           <button *ngIf="selectedId && isHr" type="button" class="secondary" (click)="clearProbationDate()">Clear probation date</button>
           <button *ngIf="selectedId" type="button" class="danger-quiet" (click)="removeSelected()">Delete</button>
