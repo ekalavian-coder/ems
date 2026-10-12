@@ -1,7 +1,7 @@
 <main class="shell">
   <header class="topbar">
     <div><p class="eyebrow">PEOPLE OPERATIONS</p><h1>Employee Management</h1><p class="subtitle">Manage employee records and probation dates</p></div>
-    <div class="role-control"><label for="role">Demo role</label><select id="role" [value]="role" (change)="changeRole($any($event.target).value)"><option value="HR">HR</option><option value="EMPLOYEE">Employee</option></select><span class="demo-note">Demo only</span></div>
+    <div class="role-control"><label for="role">Demo role</label><select id="role" [value]="role" (change)="changeRole($any($event.target).value)"><option value="HR">HR</option><option value="EMPLOYEE">Employee</option></select></div>
   </header>
 
   <div class="notice"><strong>EMS-247</strong> · Probation end date is editable by HR only. Role selector is for local demonstration, not production authentication.</div>
