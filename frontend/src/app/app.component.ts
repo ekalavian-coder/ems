@@ -33,6 +33,7 @@ export class AppComponent implements OnInit {
     job_title: ['', [Validators.required, Validators.maxLength(100)]],
     joining_date: ['', Validators.required],
     probation_end_date: [''],
+    location: ['', Validators.maxLength(100)],
     hr_verified: [false]
   });
 
@@ -71,7 +72,7 @@ export class AppComponent implements OnInit {
   }
   newEmployee(): void {
     this.selectedId = null; this.success = ''; this.error = '';
-    this.form.reset({employee_code:'',first_name:'',last_name:'',email:'',department:'',job_title:'',joining_date:'',probation_end_date:'',hr_verified:false});
+    this.form.reset({employee_code:'',first_name:'',last_name:'',email:'',department:'',job_title:'',joining_date:'',probation_end_date:'',location:'',hr_verified:false});
   }
   edit(employee: Employee): void {
     this.selectedId = employee.id; this.success = ''; this.error = '';
@@ -80,6 +81,7 @@ export class AppComponent implements OnInit {
       last_name: employee.last_name, email: employee.email, department: employee.department,
       job_title: employee.job_title, joining_date: employee.joining_date,
       probation_end_date: employee.probation_end_date ?? '',
+      location: employee.location ?? '',
       hr_verified: employee.hr_verified ?? false
     });
   }
@@ -90,7 +92,7 @@ export class AppComponent implements OnInit {
     if (value.probation_end_date && value.probation_end_date < value.joining_date) {
       this.error = 'Probation end date cannot be before joining date.'; return;
     }
-    const payload: EmployeeWrite = {...value, probation_end_date: value.probation_end_date || null};
+    const payload: EmployeeWrite = {...value, probation_end_date: value.probation_end_date || null, location: value.location || null};
     this.saving = true;
     const request = this.selectedId ? this.api.update(this.selectedId, payload) : this.api.create(payload);
     request.subscribe({
