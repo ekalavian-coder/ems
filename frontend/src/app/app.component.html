@@ -37,6 +37,7 @@
           <div class="field"><label for="department">Department *</label><input id="department" formControlName="department" placeholder="Engineering"></div>
           <div class="field"><label for="job_title">Job title *</label><input id="job_title" formControlName="job_title" placeholder="Software Engineer"></div>
           <div class="field"><label for="joining_date">Joining date *</label><input id="joining_date" type="date" formControlName="joining_date"></div>
+          <div class="field"><label for="hr_verified">HR verified</label><input id="hr_verified" type="checkbox" formControlName="hr_verified" [attr.disabled]="!isHr ? '' : null" (change)="onHrVerifiedToggle($event)"><small class="helper" *ngIf="!isHr">Read-only: HR permission required to change.</small><small class="helper" *ngIf="isHr">HR-only field; persisted in database.</small></div>
           <div class="field"><label for="probation_end_date">Probation end date</label><input id="probation_end_date" type="date" formControlName="probation_end_date" [readOnly]="!isHr"><small class="helper" *ngIf="!isHr">Read-only: HR permission required to edit.</small><small class="helper" *ngIf="isHr">Optional; must be on or after joining date.</small></div>
         </div>
         <div class="form-footer">

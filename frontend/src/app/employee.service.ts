@@ -30,6 +30,10 @@ export class EmployeeService {
     return this.http.patch<Employee>(`${this.baseUrl}/${id}/probation-end-date`,
       { probation_end_date: value }, { headers: this.headers() });
   }
+  updateHrVerified(id: number, hr_verified: boolean): Observable<Employee> {
+    return this.http.patch<Employee>(`${this.baseUrl}/${id}/hr-verified`,
+      { hr_verified }, { headers: this.headers() });
+  }
   delete(id: number): Observable<{message: string; id: number}> {
     return this.http.delete<{message: string; id: number}>(`${this.baseUrl}/${id}`, { headers: this.headers() });
   }

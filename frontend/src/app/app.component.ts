@@ -32,7 +32,8 @@ export class AppComponent implements OnInit {
     department: ['', [Validators.required, Validators.maxLength(100)]],
     job_title: ['', [Validators.required, Validators.maxLength(100)]],
     joining_date: ['', Validators.required],
-    probation_end_date: ['']
+    probation_end_date: [''],
+    hr_verified: [false]
   });
 
   ngOnInit(): void { this.load(); }
@@ -70,7 +71,7 @@ export class AppComponent implements OnInit {
   }
   newEmployee(): void {
     this.selectedId = null; this.success = ''; this.error = '';
-    this.form.reset({employee_code:'',first_name:'',last_name:'',email:'',department:'',job_title:'',joining_date:'',probation_end_date:''});
+    this.form.reset({employee_code:'',first_name:'',last_name:'',email:'',department:'',job_title:'',joining_date:'',probation_end_date:'',hr_verified:false});
   }
   edit(employee: Employee): void {
     this.selectedId = employee.id; this.success = ''; this.error = '';
@@ -78,7 +79,8 @@ export class AppComponent implements OnInit {
       employee_code: employee.employee_code, first_name: employee.first_name,
       last_name: employee.last_name, email: employee.email, department: employee.department,
       job_title: employee.job_title, joining_date: employee.joining_date,
-      probation_end_date: employee.probation_end_date ?? ''
+      probation_end_date: employee.probation_end_date ?? '',
+      hr_verified: employee.hr_verified ?? false
     });
   }
   save(): void {
@@ -104,6 +106,24 @@ export class AppComponent implements OnInit {
     this.api.updateProbationDate(this.selectedId, null).subscribe({
       next: updated => { this.success = 'Probation end date cleared.'; this.edit(updated); this.load(); },
       error: err => this.error = this.errorMessage(err)
+    });
+  }
+  onHrVerifiedToggle(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (!this.isHr) { this.form.controls.hr_verified.setValue(!checked); return; }
+    // New record: keep local value; it is sent with the create POST.
+    if (!this.selectedId) { this.form.controls.hr_verified.setValue(checked); return; }
+    this.error = ''; this.success = '';
+    this.api.updateHrVerified(this.selectedId, checked).subscribe({
+      next: updated => {
+        this.employees = this.employees.map(e => e.id === updated.id ? updated : e);
+        this.form.controls.hr_verified.setValue(updated.hr_verified);
+        this.success = `HR verified ${updated.hr_verified ? 'set' : 'cleared'}.`;
+      },
+      error: err => {
+        this.form.controls.hr_verified.setValue(!checked);
+        this.error = this.errorMessage(err);
+      }
     });
   }
   remove(employee: Employee): void {
