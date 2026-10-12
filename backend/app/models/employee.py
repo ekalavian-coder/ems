@@ -9,6 +9,7 @@ class EmployeeBase(BaseModel):
     department: str = Field(min_length=1, max_length=100)
     job_title: str = Field(min_length=1, max_length=100)
     joining_date: date
+    location: str | None = Field(default=None, max_length=100)
 
 class EmployeeCreate(EmployeeBase):
     probation_end_date: date | None = None

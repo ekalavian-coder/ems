@@ -12,7 +12,7 @@ Base path: `/api/employees`
 | PATCH | `/{id}/hr-verified` | Set `hr_verified` boolean. Body: `{ "hr_verified": true\|false }` | HR only |
 | DELETE | `/{id}` | Delete employee | Demo app access |
 
-Employee JSON fields: `id`, `employee_code`, `first_name`, `last_name`, `email`, `department`, `job_title`, `joining_date`, `probation_end_date` (nullable), `hr_verified` (boolean, defaults to false), `created_at`, `updated_at`.
+Employee JSON fields: `id`, `employee_code`, `first_name`, `last_name`, `email`, `department`, `job_title`, `joining_date`, `probation_end_date` (nullable), `hr_verified` (boolean, defaults to false), `location` (nullable string, max 100 chars; free text; no special authorization), `created_at`, `updated_at`.
 
 `hr_verified` is HR-only to write. A non-HR caller on POST or PUT has the incoming value coerced to the current stored value (or `false` on create); only the dedicated PATCH `/{id}/hr-verified` endpoint changes it, and that endpoint rejects non-HR with 403 `HR_ROLE_REQUIRED`.
 

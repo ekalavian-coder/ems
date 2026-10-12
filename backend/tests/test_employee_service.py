@@ -7,7 +7,7 @@ class FakeRepository:
     def __init__(self):
         self.rows = {1: {"id": 1, "employee_code": "E001", "first_name": "Asha", "last_name": "Rao",
                          "email": "asha@example.com", "department": "Engineering", "job_title": "Engineer",
-                         "joining_date": date(2024, 1, 1), "probation_end_date": None}}
+                         "joining_date": date(2024, 1, 1), "probation_end_date": None, "location": None}}
     def list(self, search=None, department=None):
         self.last_list_args = (search, department)
         rows = list(self.rows.values())
@@ -18,10 +18,12 @@ class FakeRepository:
             rows = [r for r in rows if r["department"].lower() == department.lower()]
         return rows
     def get(self, employee_id): return self.rows.get(employee_id)
-    def create(self, data): data = {**data, "id": 2}; self.rows[2] = data; return data
+    def create(self, data):
+        data = {**data, "id": 2, "location": data.get("location")}; self.rows[2] = data; return data
     def update(self, employee_id, data):
         if employee_id not in self.rows: return None
-        self.rows[employee_id] = {**data, "id": employee_id}; return self.rows[employee_id]
+        self.rows[employee_id] = {**data, "id": employee_id, "location": data.get("location")}
+        return self.rows[employee_id]
     def update_probation_date(self, employee_id, value):
         if employee_id not in self.rows: return None
         self.rows[employee_id]["probation_end_date"] = value; return self.rows[employee_id]
@@ -108,6 +110,19 @@ def test_hr_create_keeps_hr_verified():
     result = EmployeeService(FakeRepository()).create_employee(
         _payload(employee_code="E002", hr_verified=True), allow_hr_verified_edit=True)
     assert result["hr_verified"] is True
+
+def test_create_and_update_persist_location():
+    repository = FakeRepository()
+    service = EmployeeService(repository)
+    created = service.create_employee(_payload(employee_code="E002", location="Chennai"))
+    assert created["location"] == "Chennai"
+    assert repository.rows[2]["location"] == "Chennai"
+    updated = service.update_employee(2, _payload(employee_code="E002", location="Bangalore"))
+    assert updated["location"] == "Bangalore"
+    assert repository.rows[2]["location"] == "Bangalore"
+    cleared = service.update_employee(2, _payload(employee_code="E002", location=None))
+    assert cleared["location"] is None
+    assert repository.rows[2]["location"] is None
 
 def _repo_with_two_departments():
     repository = FakeRepository()
