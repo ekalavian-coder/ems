@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS employees (
     joining_date DATE NOT NULL,
     probation_end_date DATE NULL,
     hr_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    location VARCHAR(100) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
