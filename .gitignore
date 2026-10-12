@@ -4,6 +4,7 @@
 **/.angular/
 **/__pycache__/
 **/.pytest_cache/
+logs/
 **/data/
 **/lib/h2.jar
 .env

@@ -22,8 +22,11 @@ services:
       H2_USER: sa
       H2_PASSWORD: ""
       CORS_ORIGINS: http://localhost:4200
+      LOG_DIR: /app/logs
     ports:
       - "8000:8000"
+    volumes:
+      - ./logs/backend:/app/logs
     depends_on:
       database:
         condition: service_healthy
@@ -33,6 +36,10 @@ services:
     container_name: ems-frontend
     ports:
       - "4200:4200"
+    volumes:
+      - ./logs/frontend:/app/logs
+    command: >
+      sh -c "mkdir -p /app/logs && npm start -- --host 0.0.0.0 2>&1 | tee -a /app/logs/frontend.log"
     depends_on:
       - backend
 

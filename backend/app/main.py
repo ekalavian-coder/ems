@@ -1,8 +1,22 @@
+import logging
 import os
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.employees import router as employees_router
 from app.db.database import initialize_database
+
+log_dir = Path(os.getenv("LOG_DIR", "/app/logs"))
+log_dir.mkdir(parents=True, exist_ok=True)
+_fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s - %(message)s")
+_file_handler = RotatingFileHandler(log_dir / "backend.log", maxBytes=5_000_000, backupCount=5)
+_file_handler.setFormatter(_fmt)
+for _name in ("", "uvicorn", "uvicorn.access", "uvicorn.error", "app"):
+    _logger = logging.getLogger(_name)
+    _logger.addHandler(_file_handler)
+    if _logger.level == logging.NOTSET:
+        _logger.setLevel(logging.INFO)
 
 app = FastAPI(title="Employee Management API", version="1.0.0")
 
