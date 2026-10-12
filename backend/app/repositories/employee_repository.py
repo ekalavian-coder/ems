@@ -22,17 +22,23 @@ class EmployeeRepository:
                 result[field] = value
         return result
 
-    def list(self, search: str | None = None):
+    def list(self, search: str | None = None, department: str | None = None):
         sql = ("SELECT id, employee_code, first_name, last_name, email, department, "
                "job_title, joining_date, probation_end_date, created_at, updated_at "
                "FROM employees")
         params = []
+        clauses = []
         if search:
-            sql += (" WHERE LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ? "
-                    "OR LOWER(employee_code) LIKE ? OR LOWER(email) LIKE ?")
+            clauses.append("(LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ? "
+                           "OR LOWER(employee_code) LIKE ? OR LOWER(email) LIKE ?)")
             needle = f"%{search.lower()}%"
-            params = [needle, needle, needle, needle]
-        sql += " ORDER BY last_name, first_name LIMIT 500"
+            params.extend([needle, needle, needle, needle])
+        if department:
+            clauses.append("LOWER(department) = LOWER(?)")
+            params.append(department)
+        if clauses:
+            sql += " WHERE " + " AND ".join(clauses)
+        sql +=" ORDER BY last_name, first_name LIMIT 500"
         connection = get_connection()
         try:
             cursor = connection.cursor()
