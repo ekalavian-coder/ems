@@ -11,9 +11,10 @@ export class EmployeeService {
     const role = localStorage.getItem('ems-demo-role') || 'EMPLOYEE';
     return new HttpHeaders({ 'X-User-Role': role });
   }
-  list(search = ''): Observable<Employee[]> {
+  list(search = '', department = ''): Observable<Employee[]> {
     let params = new HttpParams();
     if (search.trim()) params = params.set('search', search.trim());
+    if (department.trim()) params = params.set('department', department.trim());
     return this.http.get<Employee[]>(this.baseUrl, { params, headers: this.headers() });
   }
   get(id: number): Observable<Employee> {

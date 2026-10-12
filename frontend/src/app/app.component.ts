@@ -17,6 +17,8 @@ export class AppComponent implements OnInit {
   employees: Employee[] = [];
   selectedId: number | null = null;
   search = '';
+  department = '';
+  allDepartments: string[] = [];
   role = localStorage.getItem('ems-demo-role') || 'HR';
   loading = false;
   saving = false;
@@ -44,12 +46,25 @@ export class AppComponent implements OnInit {
   }
   load(): void {
     this.loading = true; this.error = '';
-    this.api.list(this.search).subscribe({
-      next: rows => { this.employees = rows; this.loading = false; },
+    const unfiltered = !this.search.trim() && !this.department;
+    this.api.list(this.search, this.department).subscribe({
+      next: rows => {
+        this.employees = rows; this.loading = false;
+        const found = rows.map(e => e.department);
+        // Unfiltered load is the full set: replace. Narrowed loads only add, never shrink.
+        this.allDepartments = this.distinctSorted(unfiltered ? found : [...this.allDepartments, ...found]);
+      },
       error: err => { this.error = this.errorMessage(err); this.loading = false; }
     });
   }
   onSearch(value: string): void { this.search = value; this.load(); }
+  onDepartmentChange(value: string): void { this.department = value; this.load(); }
+  get departments(): string[] { return this.allDepartments; }
+  private distinctSorted(values: string[]): string[] {
+    const seen = new Map<string, string>();
+    for (const v of values) if (v && !seen.has(v.toLowerCase())) seen.set(v.toLowerCase(), v);
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }
   changeRole(value: string): void {
     this.role = value; localStorage.setItem('ems-demo-role', value);
   }

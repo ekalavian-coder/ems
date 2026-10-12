@@ -13,6 +13,8 @@
       <div class="panel-heading"><div><h2>Employees</h2><p>{{ employees.length }} record(s) shown</p></div><button class="primary" (click)="newEmployee()">+ New employee</button></div>
       <label class="search-label" for="search">Search employees</label>
       <div class="search-row"><input id="search" #searchBox [value]="search" (input)="onSearch(searchBox.value)" placeholder="Name, employee code or email"></div>
+      <label class="search-label" for="department-filter">Filter by department</label>
+      <div class="search-row"><select id="department-filter" [value]="department" (change)="onDepartmentChange($any($event.target).value)"><option value="" [selected]="department === ''">All departments</option><option *ngFor="let d of departments" [value]="d" [selected]="d === department">{{ d }}</option></select></div>
       <div *ngIf="loading" class="empty">Loading employees…</div>
       <div *ngIf="!loading && employees.length === 0" class="empty">No employees found. Create the first record.</div>
       <div class="employee-list" *ngIf="!loading && employees.length">
