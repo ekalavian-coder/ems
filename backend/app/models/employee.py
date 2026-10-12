@@ -12,16 +12,22 @@ class EmployeeBase(BaseModel):
 
 class EmployeeCreate(EmployeeBase):
     probation_end_date: date | None = None
+    hr_verified: bool = False
 
 class EmployeeUpdate(EmployeeBase):
     probation_end_date: date | None = None
+    hr_verified: bool = False
 
 class ProbationDateUpdate(BaseModel):
     probation_end_date: date | None = None
+
+class HrVerifiedUpdate(BaseModel):
+    hr_verified: bool
 
 class EmployeeResponse(EmployeeBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
     probation_end_date: date | None
+    hr_verified: bool
     created_at: datetime | None = None
     updated_at: datetime | None = None

@@ -1,6 +1,6 @@
 from datetime import date
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
-from app.models.employee import EmployeeCreate, EmployeeUpdate, EmployeeResponse, ProbationDateUpdate
+from app.models.employee import EmployeeCreate, EmployeeUpdate, EmployeeResponse, ProbationDateUpdate, HrVerifiedUpdate
 from app.services.employee_service import EmployeeService
 
 router = APIRouter(prefix="/employees", tags=["employees"])
@@ -27,8 +27,12 @@ def get_employee(employee_id: int, service: EmployeeService = Depends(get_servic
     return service.get_employee(employee_id)
 
 @router.post("", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
-def create_employee(payload: EmployeeCreate, service: EmployeeService = Depends(get_service)):
-    return service.create_employee(payload.model_dump())
+def create_employee(
+    payload: EmployeeCreate,
+    x_user_role: str | None = Header(default=None, alias="X-User-Role"),
+    service: EmployeeService = Depends(get_service),
+):
+    return service.create_employee(payload.model_dump(), allow_hr_verified_edit=(x_user_role == "HR"))
 
 @router.put("/{employee_id}", response_model=EmployeeResponse)
 def update_employee(
@@ -37,7 +41,19 @@ def update_employee(
     x_user_role: str | None = Header(default=None, alias="X-User-Role"),
     service: EmployeeService = Depends(get_service),
 ):
-    return service.update_employee(employee_id, payload.model_dump(), allow_probation_edit=(x_user_role == "HR"))
+    is_hr = x_user_role == "HR"
+    return service.update_employee(
+        employee_id, payload.model_dump(), allow_probation_edit=is_hr, allow_hr_verified_edit=is_hr
+    )
+
+@router.patch("/{employee_id}/hr-verified", response_model=EmployeeResponse)
+def update_hr_verified(
+    employee_id: int,
+    payload: HrVerifiedUpdate,
+    _role: str = Depends(require_hr),
+    service: EmployeeService = Depends(get_service),
+):
+    return service.update_hr_verified(employee_id, payload.hr_verified)
 
 @router.patch("/{employee_id}/probation-end-date", response_model=EmployeeResponse)
 def update_probation_end_date(

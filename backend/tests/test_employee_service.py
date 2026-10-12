@@ -25,6 +25,9 @@ class FakeRepository:
     def update_probation_date(self, employee_id, value):
         if employee_id not in self.rows: return None
         self.rows[employee_id]["probation_end_date"] = value; return self.rows[employee_id]
+    def update_hr_verified(self, employee_id, flag):
+        if employee_id not in self.rows: return None
+        self.rows[employee_id]["hr_verified"] = flag; return self.rows[employee_id]
     def delete(self, employee_id): return self.rows.pop(employee_id, None) is not None
 
 def test_update_probation_date():
@@ -58,6 +61,53 @@ def test_non_hr_update_preserves_existing_probation_date():
     result = service.update_employee(1, data, allow_probation_edit=False)
     assert result["probation_end_date"] == date(2024, 4, 1)
 
+
+def _payload(**extra):
+    return {"employee_code": "E001", "first_name": "Asha", "last_name": "Rao",
+            "email": "asha@example.com", "department": "Engineering", "job_title": "Engineer",
+            "joining_date": date(2024, 1, 1), "probation_end_date": None, **extra}
+
+def test_update_hr_verified_sets_flag():
+    service = EmployeeService(FakeRepository())
+    assert service.update_hr_verified(1, True)["hr_verified"] is True
+
+def test_update_hr_verified_missing_employee_returns_404():
+    with pytest.raises(HTTPException) as exc:
+        EmployeeService(FakeRepository()).update_hr_verified(999, True)
+    assert exc.value.status_code == 404
+
+def test_non_hr_update_preserves_existing_hr_verified():
+    repository = FakeRepository()
+    repository.rows[1]["hr_verified"] = True
+    service = EmployeeService(repository)
+    result = service.update_employee(1, _payload(hr_verified=False),
+                                     allow_probation_edit=False, allow_hr_verified_edit=False)
+    assert result["hr_verified"] is True
+
+def test_non_hr_update_without_key_preserves_hr_verified():
+    repository = FakeRepository()
+    repository.rows[1]["hr_verified"] = True
+    result = EmployeeService(repository).update_employee(1, _payload())
+    assert result["hr_verified"] is True
+
+def test_hr_update_can_change_hr_verified():
+    repository = FakeRepository()
+    repository.rows[1]["hr_verified"] = True
+    result = EmployeeService(repository).update_employee(
+        1, _payload(hr_verified=False), allow_probation_edit=True, allow_hr_verified_edit=True)
+    assert result["hr_verified"] is False
+
+def test_non_hr_create_coerces_hr_verified_to_false():
+    repository = FakeRepository()
+    result = EmployeeService(repository).create_employee(
+        _payload(employee_code="E002", hr_verified=True), allow_hr_verified_edit=False)
+    assert result["hr_verified"] is False
+    assert repository.rows[2]["hr_verified"] is False
+
+def test_hr_create_keeps_hr_verified():
+    result = EmployeeService(FakeRepository()).create_employee(
+        _payload(employee_code="E002", hr_verified=True), allow_hr_verified_edit=True)
+    assert result["hr_verified"] is True
 
 def _repo_with_two_departments():
     repository = FakeRepository()
