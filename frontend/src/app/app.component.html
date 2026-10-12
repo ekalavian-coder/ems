@@ -10,7 +10,7 @@
 
   <section class="workspace">
     <article class="panel directory">
-      <div class="panel-heading"><div><h2>Employees</h2><p>{{ employees.length }} record(s) shown</p></div><button class="primary" (click)="newEmployee()">+ New employee</button></div>
+      <div class="panel-heading"><div><h2>Employees</h2><p>{{ employees.length }} record(s) shown</p></div><button class="primary" [disabled]="!isHr" [attr.title]="!isHr ? 'HR role required to add employees' : null" (click)="newEmployee()">+ New employee</button></div>
       <label class="search-label" for="search">Search employees</label>
       <div class="search-row"><input id="search" #searchBox [value]="search" (input)="onSearch(searchBox.value)" placeholder="Name, employee code or email"></div>
       <label class="search-label" for="department-filter">Filter by department</label>
@@ -43,7 +43,7 @@
           <button type="button" class="secondary" (click)="newEmployee()">Clear form</button>
           <button *ngIf="selectedId && isHr" type="button" class="secondary" (click)="clearProbationDate()">Clear probation date</button>
           <button *ngIf="selectedId" type="button" class="danger-quiet" (click)="removeSelected()">Delete</button>
-          <button type="submit" class="primary" [disabled]="saving">{{ saving ? 'Saving…' : (selectedId ? 'Save changes' : 'Create employee') }}</button>
+          <button type="submit" class="primary" [disabled]="saving || (!selectedId && !isHr)" [attr.title]="(!selectedId && !isHr) ? 'HR role required to add employees' : null">{{ saving ? 'Saving…' : (selectedId ? 'Save changes' : 'Create employee') }}</button>
         </div>
       </form>
       <div class="contract-note"><span class="dot"></span><span><strong>Data contract:</strong> <code>probation_end_date</code> is nullable. Only the dedicated PATCH endpoint applies the server-side HR check.</span></div>
